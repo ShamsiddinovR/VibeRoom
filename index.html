@@ -1,0 +1,93 @@
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>VibeRoom</title>
+<style>
+*{box-sizing:border-box}
+body{margin:0;background:#100e20;color:white;font-family:Arial,sans-serif}
+header{padding:22px;background:#1d1833;text-align:center;border-bottom:1px solid #773cff}
+h1{margin:0;color:#c5a3ff}
+main{padding:18px;max-width:700px;margin:auto}
+.card{background:#211b39;border:1px solid #49346b;border-radius:18px;padding:16px;margin:14px 0}
+button{background:#8b5cf6;color:white;border:0;border-radius:12px;padding:12px 16px;font-weight:bold;cursor:pointer;margin:4px}
+input{padding:12px;border-radius:10px;border:1px solid #604c89;background:#171327;color:white;width:100%;margin:8px 0}
+.small{color:#c1b4dc;font-size:14px}
+.seats{font-size:28px;margin:14px 0}
+#chat{height:110px;overflow:auto;background:#171327;padding:10px;border-radius:10px}
+</style>
+</head>
+<body>
+<header>
+<h1>✨ VibeRoom</h1>
+<div class="small">Твоя атмосфера. Твои люди.</div>
+</header>
+<main>
+<div class="card">
+<h3>👤 Твой профиль</h3>
+<input id="nick" placeholder="Введи свой ник">
+<button onclick="saveNick()">Сохранить ник</button>
+<p id="welcome">Добро пожаловать!</p>
+</div>
+<div class="card">
+<h3>🎙️ Голосовые комнаты</h3>
+<div>🌙 Ночная тусовка — <span id="n1">3</span> участника</div>
+<button onclick="join('Ночная тусовка')">Войти</button>
+<div>🎮 Игровая комната — 2 участника</div>
+<button onclick="join('Игровая комната')">Войти</button>
+<div>💜 Комната друзей — 5 участников</div>
+<button onclick="join('Комната друзей')">Войти</button>
+</div>
+<div class="card" id="room" hidden>
+<h3 id="roomname">Комната</h3>
+<div class="seats">🧑‍🎤 🧑‍🚀 🐱 🦊</div>
+<button onclick="mic()">🎤 Микрофон</button>
+<button onclick="gift()">🎁 Подарок</button>
+<p id="coins">🪙 Монеты: 100</p>
+<div id="chat"></div>
+<input id="msg" placeholder="Напиши сообщение">
+<button onclick="send()">Отправить</button>
+<button onclick="leave()">Выйти из комнаты</button>
+</div>
+<div class="card">
+<h3>🎲 Мини-викторина</h3>
+<p>Как называется наша игра?</p>
+<button onclick="answer(false)">WePlay</button>
+<button onclick="answer(true)">VibeRoom</button>
+<p id="quiz"></p>
+</div>
+<div class="card">
+<h3>🏆 Твои достижения</h3>
+<p>⭐ Исследователь комнат</p>
+<p>🎁 Первый подарок</p>
+<p>🎯 Участник викторины</p>
+</div>
+<p class="small">Демонстрационная версия. Для настоящего голосового общения и игры с другими людьми нужен сервер.</p>
+</main>
+<script>
+let coins=100, muted=false;
+function saveNick(){
+ let n=document.getElementById('nick').value.trim()||'Гость';
+ document.getElementById('welcome').textContent='Привет, '+n+'! 💜';
+}
+function join(name){
+ document.getElementById('room').hidden=false;
+ document.getElementById('roomname').textContent='🎙️ '+name;
+ document.getElementById('chat').innerHTML='<p>💜 Добро пожаловать в комнату!</p>';
+ document.getElementById('room').scrollIntoView({behavior:'smooth'});
+}
+function leave(){document.getElementById('room').hidden=true}
+function mic(){
+ muted=!muted;
+ alert(muted?'Микрофон выключен в демо':'Микрофон включён только визуально в демо');
+}
+function gift(){
+ if(coins>=10){coins-=10;document.getElementById('coins').textContent='🪙 Монеты: '+coins;alert('🎁 Ты отправил виртуальный подарок!')}
+ else alert('Недостаточно монет');
+}
+function send(){
+ let el=document.getElementById('msg'), chat=document.getElementById('chat');
+ if(el.value.trim()){chat.innerHTML+='<p>💬 '+el.value.replace(/</g,'&lt;')+'</p>';el.value='';chat.scrollTop=chat.scrollHeight}
+}
+function answer(ok){document.getElementById('quiz').textContent=ok?'Правильно! 💜':'Попробуй ещё раз!'}
+</script>
+</body>
