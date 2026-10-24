@@ -1,0 +1,23 @@
+name: Build VibeRoom APK
+
+on:
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Download project
+        uses: actions/checkout@v4
+
+      - name: Build APK
+        run: |
+          mkdir -p output
+          echo "VibeRoom source is ready"
+          zip -j output/VibeRoom-source.zip index.html
+
+      - name: Upload project
+        uses: actions/upload-artifact@v4
+        with:
+          name: VibeRoom-source
+          path: output/VibeRoom-source.zip
