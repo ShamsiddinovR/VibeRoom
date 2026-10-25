@@ -19,11 +19,11 @@ jobs:
 
       - name: Set up Android SDK
         uses: android-actions/setup-android@v3
+        with:
+          packages: 'platform-tools platforms;android-35 build-tools;35.0.0'
 
-      - name: Install Android SDK
-        run: |
-          yes | sdkmanager --licenses
-          sdkmanager "platforms;android-35" "build-tools;35.0.0"
+      - name: Install Android SDK licenses
+        run: yes | sdkmanager --licenses
 
       - name: Set up Gradle
         uses: gradle/actions/setup-gradle@v4
@@ -111,12 +111,10 @@ jobs:
               @Override
               protected void onCreate(Bundle savedInstanceState) {
                   super.onCreate(savedInstanceState);
-
                   WebView webView = new WebView(this);
                   WebSettings settings = webView.getSettings();
                   settings.setJavaScriptEnabled(true);
                   settings.setDomStorageEnabled(true);
-
                   webView.setWebViewClient(new WebViewClient());
                   setContentView(webView);
                   webView.loadUrl("file:///android_asset/index.html");
