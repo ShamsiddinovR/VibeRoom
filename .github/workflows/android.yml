@@ -2,13 +2,20 @@ name: Build VibeRoom APK
 
 on:
   workflow_dispatch:
+  push:
+    paths:
+      - 'index.html'
+      - '.github/workflows/android.yml'
+
+permissions:
+  contents: read
 
 jobs:
   build:
     runs-on: ubuntu-latest
 
     steps:
-      - name: Download project
+      - name: Checkout repository
         uses: actions/checkout@v4
 
       - name: Set up Java
@@ -18,15 +25,16 @@ jobs:
           java-version: '17'
 
       - name: Set up Android SDK
-        uses: android-actions/setup-android@v4
-        with:
-         packages: 'platform-tools' 
+        uses: android-actions/setup-android@v3
 
-      - name: Install Android SDK licenses
-      -       name: Install Android SDK
-                run: sdkmanager "platforms;android-35" "build-tools;35.0.0"
-      - name: Install Android SDK
-        run: sdkmanager "platforms;android-35" "build-tools;35.0.0"
+      - name: Install Android SDK packages
+        run: |
+          sdkmanager --install \
+            "platform-tools" \
+            "platforms;android-35" \
+            "build-tools;35.0.0"
+
+      - name: Accept Android SDK licenses
         run: yes | sdkmanager --licenses
 
       - name: Set up Gradle
@@ -35,9 +43,11 @@ jobs:
           gradle-version: '8.9'
 
       - name: Create Android project
+        shell: bash
         run: |
           mkdir -p app/src/main/java/com/viberoom/app
           mkdir -p app/src/main/assets
+
           cp index.html app/src/main/assets/index.html
 
           cat > settings.gradle <<'EOF'
@@ -48,6 +58,7 @@ jobs:
                   gradlePluginPortal()
               }
           }
+
           dependencyResolutionManagement {
               repositoriesMode.set(RepositoriesMode.FAIL_ON_PROJECT_REPOS)
               repositories {
@@ -55,6 +66,7 @@ jobs:
                   mavenCentral()
               }
           }
+
           rootProject.name = 'VibeRoom'
           include ':app'
           EOF
@@ -86,6 +98,8 @@ jobs:
 
           cat > app/src/main/AndroidManifest.xml <<'EOF'
           <manifest xmlns:android="http://schemas.android.com/apk/res/android">
+              <uses-permission android:name="android.permission.INTERNET" />
+
               <application
                   android:label="VibeRoom"
                   android:theme="@android:style/Theme.Material.Light.NoActionBar"
@@ -115,21 +129,9 @@ jobs:
               @Override
               protected void onCreate(Bundle savedInstanceState) {
                   super.onCreate(savedInstanceState);
+
                   WebView webView = new WebView(this);
                   WebSettings settings = webView.getSettings();
                   settings.setJavaScriptEnabled(true);
                   settings.setDomStorageEnabled(true);
                   webView.setWebViewClient(new WebViewClient());
-                  setContentView(webView);
-                  webView.loadUrl("file:///android_asset/index.html");
-              }
-          }
-          EOF
-
-          gradle --no-daemon assembleDebug
-
-      - name: Upload APK
-        uses: actions/upload-artifact@v4
-        with:
-          name: VibeRoom-APK
-          path: app/build/outputs/apk/debug/app-debug.apk
