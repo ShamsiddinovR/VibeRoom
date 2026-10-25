@@ -3,47 +3,31 @@ name: Build VibeRoom APK
 on:
   workflow_dispatch:
   push:
-    paths:
-      - "index.html"
-      - ".github/workflows/android.yml"
-
-permissions:
-  contents: read
+    branches: [main]
 
 jobs:
   build:
     runs-on: ubuntu-latest
 
     steps:
-      - name: Checkout repository
+      - name: Download project
         uses: actions/checkout@v4
 
-      - name: Set up Java
+      - name: Setup Java
         uses: actions/setup-java@v4
         with:
           distribution: temurin
-          java-version: "17"
+          java-version: '17'
 
-      - name: Set up Android SDK
-        uses: android-actions/setup-android@v4
-
-      - name: Install Android SDK packages
-        run: |
-          sdkmanager --install \
-            "platform-tools" \
-            "platforms;android-35" \
-            "build-tools;35.0.0"
-
-      - name: Accept Android SDK licenses
-        run: yes | sdkmanager --licenses
-
-      - name: Set up Gradle
+      - name: Setup Gradle
         uses: gradle/actions/setup-gradle@v4
         with:
-          gradle-version: "8.9"
+          gradle-version: '8.7'
+
+      - name: Setup Android SDK
+        uses: android-actions/setup-android@v3
 
       - name: Create Android project
-        shell: bash
         run: |
           mkdir -p app/src/main/java/com/viberoom/app
           mkdir -p app/src/main/assets
@@ -58,7 +42,6 @@ jobs:
                   gradlePluginPortal()
               }
           }
-
           dependencyResolutionManagement {
               repositoriesMode.set(RepositoriesMode.FAIL_ON_PROJECT_REPOS)
               repositories {
@@ -66,14 +49,13 @@ jobs:
                   mavenCentral()
               }
           }
-
-          rootProject.name = 'VibeRoom'
-          include ':app'
+          rootProject.name = "VibeRoom"
+          include(":app")
           EOF
 
           cat > build.gradle <<'EOF'
           plugins {
-              id 'com.android.application' version '8.7.3' apply false
+              id 'com.android.application' version '8.6.1' apply false
           }
           EOF
 
@@ -98,18 +80,16 @@ jobs:
 
           cat > app/src/main/AndroidManifest.xml <<'EOF'
           <manifest xmlns:android="http://schemas.android.com/apk/res/android">
-              <uses-permission android:name="android.permission.INTERNET" />
-
               <application
-                  android:label="VibeRoom"
                   android:theme="@android:style/Theme.Material.Light.NoActionBar"
+                  android:label="VibeRoom"
                   android:usesCleartextTraffic="true">
                   <activity
                       android:name=".MainActivity"
                       android:exported="true">
                       <intent-filter>
-                          <action android:name="android.intent.action.MAIN" />
-                          <category android:name="android.intent.category.LAUNCHER" />
+                          <action android:name="android.intent.action.MAIN"/>
+                          <category android:name="android.intent.category.LAUNCHER"/>
                       </intent-filter>
                   </activity>
               </application>
@@ -122,7 +102,6 @@ jobs:
           import android.app.Activity;
           import android.os.Bundle;
           import android.webkit.WebView;
-          import android.webkit.WebViewClient;
           import android.webkit.WebSettings;
 
           public class MainActivity extends Activity {
@@ -134,4 +113,18 @@ jobs:
                   WebSettings settings = webView.getSettings();
                   settings.setJavaScriptEnabled(true);
                   settings.setDomStorageEnabled(true);
-                  webView.setWebViewClient(new WebViewClient());
+
+                  setContentView(webView);
+                  webView.loadUrl("file:///android_asset/index.html");
+              }
+          }
+          EOF
+
+      - name: Build APK
+        run: gradle assembleDebug
+
+      - name: Upload APK
+        uses: actions/upload-artifact@v4
+        with:
+          name: VibeRoom-APK
+          path: app/build/outputs/apk/debug/app-debug.apk
